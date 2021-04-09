@@ -10,15 +10,23 @@ class Host(str):
         self.sshkey = self.extract_sshkey()
 
     def extract_host(self):
+        def isolate(ret):
+            ret = ret.strip()
+            if ":" in ret:
+                ret = ret.split(":")[0]
+            elif "!" in ret:
+                ret = ret.split("!")[0]
+            elif " " in ret:
+                ret = ret.split(" ")[0]
+            else:
+                ret = ""
+            return ret.strip()
+
         if "@" in self.raw:
             ret = self.raw.split("@")[1]
-            if ":" in ret:
-                return ret.split(":")[0]
-            elif "!" in ret:
-                return ret.split("!")[0]
-            elif " " in ret:
-                return ret.split(" ")[0]
-            return ret.strip()
+            return isolate(ret)
+        else:
+            return isolate(self.raw) or self.raw
     
     def extract_username(self):
         if "@" in self.raw:
