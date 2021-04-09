@@ -1,8 +1,4 @@
 import imssh
-import time
-import re
-import traceback
-import sys
 
 def target(device):
     try:
@@ -10,7 +6,7 @@ def target(device):
         s.execute("sudo ls -l", 1)
 
     except Exception as e:
-        print(traceback.format_exc())
+        print(imssh.format_exc())
         pass
 
 target(imssh.Host("smartcow@192.168.0.175 smartcow"))

@@ -1,6 +1,6 @@
-from .parser import DataLoader, Host
-from .remotessh import RemoteSSH
-from .threading import Thread, ThreadPool, ConcurrentThreadPool, map, sync
+import time
+from traceback import format_exc
 
-open = DataLoader
-connect = RemoteSSH
+from .parser import DataLoader as open, Host
+from .remotessh import RemoteSSH as connect
+from .threading import Thread, ThreadPool, ConcurrentThreadPool, map, sync
