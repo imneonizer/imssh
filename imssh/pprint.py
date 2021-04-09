@@ -1,3 +1,9 @@
+import re
+import hashlib
+import threading
+pprint_lock = threading.Lock()
+
+class PPrint:
     def clean(self, line):
         # clean string to remove any kind of shell color formatting
         return re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).replace('\b', '').replace('\r', '')

@@ -1,16 +1,14 @@
-import paramiko
 import re
 import os
 import time
+import paramiko
 
-import threading
-import hashlib
-import concurrent.futures
-pprint_lock = threading.Lock()
+from .sftp import Sftp
+from .history import History
+from .pprint  import PPrint
+from .scripts import Scripts
 
-
-
-class RemoteSSH:
+class RemoteSSH(Sftp, PPrint, Scripts):
     def __init__(self, *args, **kwargs):
         if args or kwargs:
             self.connect(*args, **kwargs)
@@ -58,7 +56,7 @@ class RemoteSSH:
         self.stdout = self.channel.makefile('r')
         self.sftp = self.session.open_sftp()
 
-        self.history = ShellHistory(
+        self.history = History(
             self.stdin_history_size,
             self.stdout_history_size
         )
@@ -70,29 +68,18 @@ class RemoteSSH:
             self.sftp.close()
             self.session.close()
         except: pass
-        
 
-    
     def reset(self):
         self.session.close()
         self.init_session()
 
-    def terminate(self):
+    def interrupt(self):
         # sends program terminate command, i.e, ctrl+c
         self.stdin.write("\x03")
     
     def write_password(self, password=None):
         # write password to the shell
         self.stdin.write(password or self.password + "\n")
-    
-    def write(self, command, postfix="\n", sudo=False):
-        if command.startswith("sudo") or sudo:
-            # if commands starts with sudo, then automatically enter password
-            command = "echo {} | sudo -S {}".format(self.password, command.strip())
-
-        # execute command normally
-        self.stdin.write(command + postfix)
-        self.history._stdin.append(command)
     
     def execute(self, command, pprint=0, end='', sudo=False):
         # execute a single command and return output without writing to stdin
@@ -117,7 +104,15 @@ class RemoteSSH:
             self.pprint(output, pattern=pprint, end=end)
 
         return output
-    
+
+    def write(self, command, postfix="\n", sudo=False):
+        if command.startswith("sudo") or sudo:
+            # if commands starts with sudo, then automatically enter password
+            command = "echo {} | sudo -S {}".format(self.password, command.strip())
+
+        # execute command normally
+        self.stdin.write(command + postfix)
+        self.history._stdin.append(command)
 
     def read(self, nbytes=2048, data="", bypass_sudo=True, repeat_last=False, clean=True, include_stdin=False):
         # receive data in buffers

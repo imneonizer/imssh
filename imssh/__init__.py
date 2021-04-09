@@ -1,2 +1,6 @@
-from .shell_handler import RemoteSSH, Thread, ThreadPool, ConcurrentThreadPool, map, sync
+from .parser import DataLoader, Host
+from .remotessh import RemoteSSH
+from .threading import Thread, ThreadPool, ConcurrentThreadPool, map, sync
+
+open = DataLoader
 connect = RemoteSSH

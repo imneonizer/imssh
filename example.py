@@ -4,21 +4,15 @@ import re
 import traceback
 import sys
 
-# @imssh.sync
-def target(host):
+def target(device):
     try:
-        if not host[0].isdigit(): return
-
-        s = imssh.connect(username="nvidia", password="nvidia", host=host)
-        # s.put("scripts/install_jtop.sh", "/home/nvidia/install_jtop.sh")
-        # s.execute("sudo chmod +x /home/nvidia/install_jtop.sh")
-        # s.execute("sudo /home/nvidia/install_jtop.sh", 1, end="\n")
-        s.sftp.remove("/home/nvidia/install_jtop.sh")
+        s = imssh.connect(username=device.username, password=device.password, host=device.host, port=device.port)
+        s.execute("sudo ls -l", 1)
 
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
         pass
 
-with open("hosts.ini", "r") as f:
-    hosts =  f.readlines()
-    res = imssh.map(target, hosts)
+target(imssh.Host("smartcow@192.168.0.175 smartcow"))
+# with imssh.open("hosts") as hosts:
+#     imssh.map(target=target, args=hosts.get('nx'))
