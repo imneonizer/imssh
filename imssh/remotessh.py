@@ -95,16 +95,16 @@ class RemoteSSH(Sftp, PPrint, Scripts):
         
         error = ""
         if stderr:
-            error = "\n".join(stderr.readlines())
-        
+            error = stderr.read().decode()
+
         output = '\n'.join([self.clean(line.rstrip()) for line in stdout.readlines()])
-        output += error
+        output += "\n"+error
         
-        # replace traces of 'sudo enter password' from output
+        # remove 'sudo enter password' from output
         output = output.replace("[sudo] password for {}: ".format(self.username), "")
 
         if replace_output:
-            output = '\n'.join([replace_output(line) for line in output.split("\n")]).strip()
+            output = '\n'.join([replace_output(line) for line in output.splitlines()]).strip()
 
         if pprint:
             self.pprint(output, pattern=pprint, end=end)

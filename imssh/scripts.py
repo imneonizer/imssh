@@ -40,6 +40,10 @@ class Scripts:
 
             replace_output = lambda x: x.replace(remotepath, ("\n" if not x.startswith("/home") else "")+os.path.basename(script))
 
+            if args:
+                if not isinstance(args, list):
+                    args = [args]
+
             # execute script on remote machine
             sudo = "sudo " if sudo else ""
             output = self.execute("{0}chmod 777 {1}; {0}{1}{2}".format(sudo, remotepath, ' '+' '.join(args) if args else ''), pprint=pprint, end=end, sudo=sudo, replace_output=replace_output if clean_output else None)
