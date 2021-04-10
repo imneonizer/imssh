@@ -113,18 +113,22 @@ class RemoteSSH(Sftp, PPrint, Scripts):
         script = self.resolve_path(path, local=True)
         remotepath = "/home/{}/{}_{}".format(self.username, time.time(), os.path.basename(script))
 
-        with open(script, "r") as script:
-            with self.sftp.open(remotepath, "w") as f:
-                f.write(script.read())
-        
-        # execute script on remote machine
-        sudo = "sudo " if sudo else ""
-        out = self.execute("{0}chmod 777 {1}; {0}{1}".format(sudo, remotepath), pprint=pprint, end=end, sudo=sudo, *args, **kwargs)
-
-        # remove script from remote machine
-        self.sftp.remove(remotepath)
-
-        return out
+        try:
+            with open(script, "r") as script:
+                with self.sftp.open(remotepath, "w") as f:
+                    f.write(script.read())
+            
+            # execute script on remote machine
+            sudo = "sudo " if sudo else ""
+            out = self.execute("{0}chmod 777 {1}; {0}{1}".format(sudo, remotepath), pprint=pprint, end=end, sudo=sudo, *args, **kwargs)
+            return out
+        except KeyboardInterrupt:
+            pass
+        except Exception:
+            raise
+        finally:
+            # remove script from remote machine
+            self.sftp.remove(remotepath)
 
     def write(self, command, postfix="\n", sudo=False):
         if command.startswith("sudo") or sudo:
