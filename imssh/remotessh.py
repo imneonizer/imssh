@@ -120,7 +120,7 @@ class RemoteSSH(Sftp, PPrint, Scripts):
         self.stdin.write(command + postfix)
         self.history._stdin.append(command)
 
-    def read(self, nbytes=2048, data="", bypass_sudo=True, repeat_last=False, clean=True, include_stdin=False):
+    def read(self, nbytes=2048, data="", repeat_last=False, clean=True, include_stdin=False):
         # receive data in buffers
         while True:
             if self.channel.recv_ready():
