@@ -1,6 +1,7 @@
 import re
 import os
 import time
+import getpass
 import paramiko
 
 from .sftp import Sftp
@@ -17,6 +18,7 @@ class RemoteSSH(Sftp, PPrint, Scripts):
                  host_keys="/dev/null", port=22, timeout=5, \
                  stdin_history_size=10, stdout_history_size=20):
 
+        self.localusername = getpass.getuser()
         self.username = username.strip()
         self.host = host.strip()
         self.hostname = host

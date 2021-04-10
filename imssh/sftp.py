@@ -1,27 +1,61 @@
 import os
 
 class Sftp:
-    def put(self, localpath, remotepath):
+
+    def remote_dir_exists(self, path, sftp):
+        try:
+            # test if remote_path exists
+            sftp.chdir(path) 
+            return True
+        except IOError:
+            return False
+
+    def put(self, localpath, remotepath, create_dir=False):
         sftp = self.session.open_sftp()
+
+        if remotepath.startswith("~/"):
+            remotepath = remotepath.replace("~/", "")
+            remotepath = os.path.join("/home", self.username, remotepath)
         
+        if localpath.startswith("~/"):
+            localpath = localpath.replace("~/", "")
+            localpath = os.path.join("/home", self.localusername, localpath)
+
         if os.path.isdir(localpath):
-            try:
-                # test if remote_path exists
-                sftp.chdir(remotepath) 
-            except IOError:
-                # create remote dir
+            if not self.remote_dir_exists(remotepath, sftp):
                 sftp.mkdir(remotepath)
-            
+
             # copy file to remote one by one
             for file in os.listdir(localpath):
                 self.put(os.path.join(localpath, file), os.path.join(remotepath, file))
         else:
+            # check if file name is explicitly passed
+            if not os.path.basename(localpath) == os.path.basename(remotepath):
+                # add remote path file name then
+                remotepath = os.path.join(remotepath, os.path.basename(localpath))
+
+            if create_dir:
+                # check if reomte dir does not exists
+                remotedir = os.path.dirname(remotepath)
+                if not self.remote_dir_exists(remotedir, sftp):
+                    # create remote dir
+                    sftp.mkdir(remotedir)
+
+            # copy file from local system to remote path
             sftp.put(localpath, remotepath)
         
         sftp.close()
 
-    def get(self, remotepath, localpath, isdir=False):
+    def get(self, remotepath, localpath, isdir=False, create_dir=True):
         sftp = self.session.open_sftp()
+
+        if remotepath.startswith("~/"):
+            remotepath = remotepath.replace("~/", "")
+            remotepath = os.path.join("/home", self.username, remotepath)
+        
+        if localpath.startswith("~/"):
+            localpath = localpath.replace("~/", "")
+            localpath = os.path.join("/home", self.localusername, localpath)
         
         if isdir:
             # create local dir
@@ -31,6 +65,15 @@ class Sftp:
             for file in sftp.listdir(path=remotepath):
                 self.get(os.path.join(remotepath, file), os.path.join(localpath, file))
         else:
+            # check if file name is explicitly passed
+            if not os.path.splitext(os.path.basename(localpath))[1]:
+                # add local path file name then
+                localpath = os.path.join(localpath, os.path.basename(remotepath))
+
+            if create_dir:
+                localdir = os.path.dirname(localpath)
+                os.makedirs(localdir, exist_ok=True)
+
             try:
                 sftp.get(remotepath, localpath)
             except OSError:
