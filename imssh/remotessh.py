@@ -105,6 +105,9 @@ class RemoteSSH(Sftp, PPrint, Scripts):
 
         if replace_output:
             output = '\n'.join([replace_output(line) for line in output.splitlines()]).strip()
+        
+        if output:
+            output = output.strip()
 
         if pprint:
             self.pprint(output, pattern=pprint, end=end)
