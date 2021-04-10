@@ -62,8 +62,7 @@ class ImsshLauncher:
 
         if self.args.target:
             if (not self.args.username) and (not self.args.password):
-                if self.args.verbose:
-                    print("[ERROR] username and password required for target: {}".format(self.args.target))
+                print("[ERROR] username and password required for target: {}".format(self.args.target))
                 exit(1)
 
             # this means to execute command on a single device
