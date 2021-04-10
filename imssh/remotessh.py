@@ -128,16 +128,6 @@ class RemoteSSH(Sftp, PPrint, Scripts):
             else:
                 break
         
-        # logic to bypass sudo
-        if "[sudo] password for" in data and bypass_sudo == True:
-            # automatically enter password
-            self.write_password()
-            time.sleep(1)
-
-            # read more from stdout after
-            # password is written to stdin
-            return self.read(data=data, bypass_sudo=False)
-        
         # save stdout history
         output = ""
         for line in data.split("\n"):
