@@ -9,17 +9,18 @@ class Sftp:
             return True
         except IOError:
             return False
+    
+    def resolve_path(self, path, local=False):
+        if path.startswith("~/"):
+            path = path.replace("~/", "")
+            path = os.path.join("/home", self.localusername if local else self.username, path)
+        return path
 
     def put(self, localpath, remotepath, create_dir=False):
         sftp = self.session.open_sftp()
 
-        if remotepath.startswith("~/"):
-            remotepath = remotepath.replace("~/", "")
-            remotepath = os.path.join("/home", self.username, remotepath)
-        
-        if localpath.startswith("~/"):
-            localpath = localpath.replace("~/", "")
-            localpath = os.path.join("/home", self.localusername, localpath)
+        localpath = self.resolve_path(localpath, local=True)
+        remotepath = self.resolve_path(remotepath, local=False)
 
         if os.path.isdir(localpath):
             if not self.remote_dir_exists(remotepath, sftp):
@@ -43,24 +44,19 @@ class Sftp:
 
             # copy file from local system to remote path
             sftp.put(localpath, remotepath)
-        
+
         sftp.close()
 
     def get(self, remotepath, localpath, isdir=False, create_dir=True):
         sftp = self.session.open_sftp()
 
-        if remotepath.startswith("~/"):
-            remotepath = remotepath.replace("~/", "")
-            remotepath = os.path.join("/home", self.username, remotepath)
-        
-        if localpath.startswith("~/"):
-            localpath = localpath.replace("~/", "")
-            localpath = os.path.join("/home", self.localusername, localpath)
-        
+        localpath = self.resolve_path(localpath, local=True)
+        remotepath = self.resolve_path(remotepath, local=False)
+
         if isdir:
             # create local dir
             os.makedirs(localpath, exist_ok=True)
-            
+
             # copy files from remote one by one
             for file in sftp.listdir(path=remotepath):
                 self.get(os.path.join(remotepath, file), os.path.join(localpath, file))
@@ -81,7 +77,7 @@ class Sftp:
                 if os.path.exists(localpath) and os.path.isfile(localpath) and os.path.getsize(localpath) == 0:
                     # remove temporary file which is created by sftp
                     os.remove(localpath)
-                
+
                 # recursively download directory
                 self.get(remotepath, localpath, isdir=True)
 
