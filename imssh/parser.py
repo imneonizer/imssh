@@ -83,10 +83,8 @@ class DataLoader:
             if self.groups:
                 self.all = [Host(x) for x in self.raw.split("\n") if x not in self.groups]
 
-        self.cache = {}
-    
-    def filter_hosts(self, line, group=None):
-        return sum([line.find(x) for x in self.groups]) < 0 and line.strip()
+    # def filter_hosts(self, line, group=None):
+    #     return sum([line.find(x) for x in self.groups]) < 0 and line.strip()
     
     def filter_comment(self, line):
         line = line.strip()
@@ -99,35 +97,38 @@ class DataLoader:
         return True
 
     def get(self, group):
-        if group == "all" or group == "[all]":
+        group = "[{}]".format(group.replace("[", "").replace("]", ""))
+
+        if group == "[all]":
             return self.all
-        else:
-            group = group.strip().lstrip("[").rstrip("]")
 
-            if group in self.cache:
-                return self.cache[group]
-
-            if "[{}]".format(group) not in self.groups:
-                return None
-            
-            try:
-                raw = self.raw[self.raw.find(group):].split("\n", 1)[1]
-                ending_group = re.findall(self.group_re, self.raw)
-
-                if ending_group:
-                    raw = raw.split(ending_group[0])[0]
-                    raw = [Host(x.strip()) for x in raw.split("\n") if self.filter_comment(x)]
-
-                    self.cache[group] = raw
-                    return raw
-            except IndexError:
-                return
+        if not group in self.groups:
+            return []
+        
+        linenum = self.findline(group)
+        if linenum is not None:
+            hosts = []
+            for i in self.readlines(linenum+1, -1):
+                if i in self.groups: break
+                hosts.append(Host(i))
+            return hosts
+        return []
+    
+    def findline(self, string):
+        for i, line in enumerate(self.readlines()):
+            if string == line:
+                return i
 
     def read(self):
         return self.raw
     
-    def readlines(self, count=None):
+    def readlines(self, count=None, end=None):
         output = self.raw.split("\n")
+
+        if count and end:
+            if end == -1:
+                return output[count:]
+            return output[count:count+end]
         if count:
             return output[:count]
         return  output

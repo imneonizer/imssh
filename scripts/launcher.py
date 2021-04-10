@@ -45,7 +45,7 @@ class ImsshLauncher:
     def run(self):
         ap = argparse.ArgumentParser()
         ap.add_argument("-c", "--command", required=True, help="command to execute on remote machines")
-        ap.add_argument("-i", "--input", required=False, default="./hosts", help="path to hosts file")
+        ap.add_argument("-i", "--input", required=False, default="", help="path to hosts file")
         ap.add_argument("-u", "--username", required=False, default=None, help="default username for hosts")
         ap.add_argument("-p", "--password", required=False, default=None, help="default password for hosts")
         ap.add_argument("-t", "--target", required=False, help="target machine")
