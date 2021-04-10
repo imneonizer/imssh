@@ -35,7 +35,7 @@ class Host(str):
     def extract_port(self):
         if ":" in self.raw:
             ret = self.raw.split(":")[1]
-            ret = re.findall(r"[0-9].*[0-9]", ret)
+            ret = re.findall(r"\d+", ret)
             if ret:
                 return int(ret[0])
         return 22
