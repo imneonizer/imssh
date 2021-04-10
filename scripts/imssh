@@ -4,7 +4,6 @@ import os, sys
 import argparse
 import paramiko
 import traceback
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 import imssh
 
 class ImsshLauncher:
