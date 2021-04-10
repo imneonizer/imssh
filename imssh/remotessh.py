@@ -9,13 +9,17 @@ from .history import History
 from .pprint  import PPrint
 from .scripts import Scripts
 
+class AllowAnythingPolicy(paramiko.MissingHostKeyPolicy):
+    def missing_host_key(self, client, hostname, key):
+        return
+
 class RemoteSSH(Sftp, PPrint, Scripts):
     def __init__(self, *args, **kwargs):
         if args or kwargs:
             self.connect(*args, **kwargs)
 
     def connect(self, username, host, password, \
-                 host_keys="/dev/null", port=22, timeout=5, \
+                 host_keys=None, port=22, timeout=5, \
                  stdin_history_size=10, stdout_history_size=20):
 
         self.localusername = getpass.getuser()
@@ -43,8 +47,9 @@ class RemoteSSH(Sftp, PPrint, Scripts):
     
     def init_session(self):
         self.session = paramiko.SSHClient()
-        self.session.load_host_keys(self.host_keys)
-        self.session.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if self.host_keys:
+            self.session.load_host_keys(self.host_keys)
+        self.session.set_missing_host_key_policy(AllowAnythingPolicy)
         
         self.session.connect(
             username=self.username,
