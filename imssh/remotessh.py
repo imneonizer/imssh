@@ -84,7 +84,7 @@ class RemoteSSH(Sftp, PPrint, Scripts):
         # write password to the shell
         self.stdin.write(password or self.password + "\n")
     
-    def execute(self, command, pprint=0, end='', sudo=False):
+    def execute(self, command, pprint=0, end='', sudo=False, replace_output=None):
         # execute a single command and return output without writing to stdin
         # faster than stdin.write
         if command.startswith("sudo") or sudo:
@@ -102,26 +102,32 @@ class RemoteSSH(Sftp, PPrint, Scripts):
         
         # replace traces of 'sudo enter password' from output
         output = output.replace("[sudo] password for {}: ".format(self.username), "")
-        
+
+        if replace_output:
+            output = '\n'.join([replace_output(line) for line in output.split("\n")]).strip()
+
         if pprint:
             self.pprint(output, pattern=pprint, end=end)
 
         return output
     
-    def execute_script(self, path, pprint=0, end='', sudo=False, *args, **kwargs):
+    def execute_script(self, path, pprint=0, end='', sudo=False, clean_output=True, *args, **kwargs):
         # convert ~/ to absolute path for sftp
         script = self.resolve_path(path, local=True)
         remotepath = "/home/{}/{}_{}".format(self.username, time.time(), os.path.basename(script))
 
         try:
-            with open(script, "r") as script:
+            with open(script, "r") as s:
                 with self.sftp.open(remotepath, "w") as f:
-                    f.write(script.read())
-            
+                    f.write(s.read())
+
+            replace_output = lambda x: x.replace(remotepath, ("\n" if not x.startswith("/home") else "")+os.path.basename(script))
+
             # execute script on remote machine
             sudo = "sudo " if sudo else ""
-            out = self.execute("{0}chmod 777 {1}; {0}{1}".format(sudo, remotepath), pprint=pprint, end=end, sudo=sudo, *args, **kwargs)
-            return out
+            output = self.execute("{0}chmod 777 {1}; {0}{1}".format(sudo, remotepath), pprint=pprint, end=end, sudo=sudo, replace_output=replace_output if clean_output else None, *args, **kwargs)
+
+            return output
         except KeyboardInterrupt:
             pass
         except Exception:
